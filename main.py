@@ -1,6 +1,9 @@
 import sys
 import modal
-# Working image configuration for evo2 on Modal with H100
+import base64
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
 evo2_image = (
     modal.Image.from_registry(
         "nvidia/cuda:12.4.1-devel-ubuntu22.04", add_python="3.11"
@@ -10,23 +13,16 @@ evo2_image = (
         "cmake",
         "ninja-build",
         "git",
-        "libcudnn9-dev-cuda-12", # Essential for compiling TE from source if needed
+        "libcudnn9-dev-cuda-12", 
     ])
     .env({"CXX": "/usr/bin/g++"})
     .run_commands("pip install wheel")    
-    # Step 2: Install a specific "sweet spot" version of Transformer Engine known to be compatible.
-    # The latest version caused ABI errors, and very old versions had H100 hardware incompatibility.
     .run_commands("pip install 'transformer-engine[pytorch]==2.6.0.post1'")
-
-    # Step 3: Install evo2 from the repo to get access to notebook data files.
     .run_commands(
         "pip install packaging",
         "git clone https://github.com/arcinstitute/evo2 && cd evo2 && pip install -e ."
     )
-    # Step 4: Install a version of flash-attn known to be compatible with the chosen TE version.
     .run_commands("pip install flash-attn==2.7.4.post1")
-
-    # Step 5: Install remaining dependencies for the application logic.
     .pip_install_from_requirements("requirements.txt")
 )
 
@@ -167,9 +163,23 @@ def run_brca1_analysis():
 
 @app.function()
 def brca1_example():
+    from io import BytesIO
     print("Running BRCA1 variant analysis") 
+    
     #Run inference
-    returns = run_brca1_analysis.remote()
+    result = run_brca1_analysis.remote()
+    
+    if "plot" in result:
+        plot_data = base64.b64decode(result["plot"])
+        with open("brca1_analysis_plot.png","wb") as f:
+            f.write(plot_data)
+        img = mpimg.imread(BytesIO(plot_data))
+        plt.figure(figsize=(10,5))
+        plt.imshow(img)
+        plt.axis("off")
+        plt.show()
+    
+    
 
 
 @app.local_entrypoint()

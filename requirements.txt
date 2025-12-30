@@ -5,3 +5,7 @@ seaborn
 scikit-learn
 openpyxl
 requests
+numpy==1.26.4
+biopython
+packaging
+psutil
