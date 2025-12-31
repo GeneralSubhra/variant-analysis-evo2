@@ -179,7 +179,19 @@ def brca1_example():
         plt.axis("off")
         plt.show()
     
-    
+class Evo2Model:
+    @modal.enter()
+    def load_evo2_modle(self):
+        from evo2 import Evo2
+        WINDOW_SIZE = 8192
+        print("Loading evo2")
+        model = Evo2('evo2_1b_base')
+        print("Evo2 loaded")
+        
+    @modal.fastapi_endpoint(method="POST")    
+    def analyze_single_variant(self, variant_position:int, alternative:str, genome:str, chromosome:str):
+        print("Genome:",genome)
+            
 
 
 @app.local_entrypoint()
