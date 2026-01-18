@@ -1,17 +1,36 @@
 "use client";
 import Link from "next/link";
-import { useEffect } from "react";
-import { Card, CardHeader, CardTitle } from "~/components/ui/card";
-import { getAvailableGenomes } from "~/utils/genome-api";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Select } from "~/components/ui/select";
+import {
+  type GenomeAssemblyFromSearch,
+  getAvailableGenomes
+} from "~/utils/genome-api";
 
 export default function HomePage() {
+  const [genomes, setGenomes] = useState<GenomeAssemblyFromSearch[]>([]);
+  const [selectedGenome, setSelectedGenome] = useState<string>("hg38");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchGenomes = async () => {
-      const data = await getAvailableGenomes();
-      console.log(data.genomes["Human"]);
+      try {
+        setIsLoading(true);
+        const data = await getAvailableGenomes();
+        if (data.genomes && data.genomes["Human"]) {
+          setGenomes(data.genomes["Human"]);
+        }
+      } catch (err) {
+        setError("Failed to load Genome data")
+      } finally {
+        setIsLoading(false);
+      }
     }
     fetchGenomes();
   }, [])
+
   return <div className="min-h-screen bg-[#e6e6e6]" >
     <header className="border-b border-[#3c4f3d]/20 bg-white">
       <div className="container mx-auto px-6 py-4">
@@ -38,6 +57,8 @@ export default function HomePage() {
               Organism : <span className="font-semibold">Human</span></div>
           </div>
         </CardHeader>
+        <CardContent className="pb-4">
+        </CardContent>
       </Card>
     </main>
   </div>;

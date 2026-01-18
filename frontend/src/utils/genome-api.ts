@@ -9,11 +9,11 @@ export async function getAvailableGenomes() {
     const response = await fetch(apiURL);
 
     if (!response.ok) {
-        throw new Error("Failed to fetch genomes from UCSC API");
+        throw new Error("Failed to fetch genome list from UCSC API");
     }
 
     const genomeData = await response.json();
-    if (!genomeData) {
+    if (!genomeData.ucscGenomes) {
         throw new Error("UCSC API failure: missing ucscGenomes");
     }
 
@@ -32,5 +32,7 @@ export async function getAvailableGenomes() {
             active: !!genomeInfo.active, //1 = true, 0 = false
         });
     }
-    return structuredGenome;
+    return {
+        genomes: structuredGenome
+    };
 }
