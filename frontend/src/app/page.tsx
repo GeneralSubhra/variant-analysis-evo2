@@ -31,6 +31,10 @@ export default function HomePage() {
     fetchGenomes();
   }, [])
 
+  const handleGenomeChange = (value: string) => {
+    setSelectedGenome(value);
+  }
+  
   return <div className="min-h-screen bg-[#e6e6e6]" >
     <header className="border-b border-[#3c4f3d]/20 bg-white">
       <div className="container mx-auto px-6 py-4">
@@ -58,6 +62,7 @@ export default function HomePage() {
           </div>
         </CardHeader>
         <CardContent className="pb-4">
+          <Select value={selectedGenome} onValueChange={handleGenomeChange}></Select>
         </CardContent>
       </Card>
     </main>
