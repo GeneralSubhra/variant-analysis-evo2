@@ -10,6 +10,14 @@ export interface ChromosomeFromSearch {
   name: string;
 }
 
+export interface GeneFromSearch {
+  symbol: string;
+  name: string;
+  chrom: string;
+  description: string;
+  GeneID: string;
+}
+
 export async function getAvailableGenomes() {
   const apiURL = "http://api.genome.ucsc.edu/list/ucscGenomes";
   const response = await fetch(apiURL);
@@ -81,4 +89,21 @@ export async function getGenomeChromosomes(genomeId: string) {
     return anum.localeCompare(bnum);
   });
   return { chromosomes };
+}
+
+
+export async function searchGenes(query: string, genome: string) {
+  const url = "https://clinicaltables.nlm.nih.gov/api/ncbi_genes/v3/search";
+  const params = new URLSearchParams({
+    terms: query,
+    display_fields: "chrosome,Symbol,description,map_location,type_of_gene",
+    expand_fields: "chrosome,Symbol,description,map_location,type_of_gene,GenomicInfo,GeneID",
+  });
+  const response = await fetch(`${url}?${params}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch gene list from NCBI API");
+  }
+  const data = await response.json();
+  const result: GeneFromSearch[] = [];
+
 }
