@@ -1,3 +1,5 @@
+import { symbol } from "zod/v4";
+
 export interface GenomeAssemblyFromSearch {
   id: string;
   name: string;
@@ -18,6 +20,19 @@ export interface GeneFromSearch {
   GeneID: string;
 }
 
+export interface GeneDetailsFromSearch {
+  genomicInfo?: {
+    chrstart: number;
+    chrstop: number;
+    strand?: string;
+
+  }[];
+  summary?: string;
+  organism?: {
+    scientificname: string;
+    commonname: string;
+  }
+}
 export async function getAvailableGenomes() {
   const apiURL = "http://api.genome.ucsc.edu/list/ucscGenomes";
   const response = await fetch(apiURL);
@@ -96,8 +111,7 @@ export async function searchGenes(query: string, genome: string) {
   const url = "https://clinicaltables.nlm.nih.gov/api/ncbi_genes/v3/search";
   const params = new URLSearchParams({
     terms: query,
-    display_fields: "chrosome,Symbol,description,map_location,type_of_gene",
-    expand_fields: "chrosome,Symbol,description,map_location,type_of_gene,GenomicInfo,GeneID",
+    ef: "chromosome,Symbol,description,map_location,type_of_gene,GenomicInfo,GeneID",
   });
   const response = await fetch(`${url}?${params}`);
   if (!response.ok) {
@@ -106,4 +120,24 @@ export async function searchGenes(query: string, genome: string) {
   const data = await response.json();
   const result: GeneFromSearch[] = [];
 
+  if (data[0] > 0 && data[2]) {
+    const fieldMap = data[2];
+    const length = fieldMap.Symbol ? fieldMap.Symbol.length : 0;
+
+    for (let i = 0; i < length; i++) {
+      let chrom = fieldMap.chromosome[i] || "";
+      if (chrom && !chrom.startsWith("chr")) {
+        chrom = `chr${chrom}`;
+      }
+
+      result.push({
+        symbol: fieldMap.Symbol[i],
+        name: fieldMap.description[i],
+        chrom: chrom,
+        description: fieldMap.description[i],
+        GeneID: fieldMap.GeneID ? fieldMap.GeneID[i] : "",
+      });
+    }
+  }
+  return { result };
 }

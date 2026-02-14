@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, Dna } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -9,10 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import {
   type ChromosomeFromSearch,
+  type GeneFromSearch,
   type GenomeAssemblyFromSearch,
   getAvailableGenomes,
-  getGenomeChromosomes
+  getGenomeChromosomes,
+  searchGenes
 } from "~/utils/genome-api";
+import { queryObjects } from "v8";
 
 type Mode = "browse" | "search";
 
@@ -20,6 +23,7 @@ export default function HomePage() {
   const [genomes, setGenomes] = useState<GenomeAssemblyFromSearch[]>([]);
   const [selectedGenome, setSelectedGenome] = useState<string>("hg38");
   const [isLoading, setIsLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<GeneFromSearch[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [chromosomes, setChromosomes] = useState<ChromosomeFromSearch[]>([]);
   const [selectedChromosome, setSelectedChromosome] = useState<string>("chr1");
@@ -62,6 +66,30 @@ export default function HomePage() {
     fetchChromosome();
   }, [selectedGenome])
 
+  const performGeneSearch = async (query: string, genome: string, filterFunc?: (gene: GeneFromSearch) => boolean,
+  ) => {
+    try {
+      setIsLoading(true);
+      const data = await searchGenes(query, genome);
+      const result = filterFunc ? data.result.filter(filterFunc) : data.result;
+      console.log(result);
+      setSearchResults(result);
+    } catch (err) {
+      setError("Failed to search genes")
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedChromosome || mode !== "browse") return;
+    performGeneSearch(
+      selectedChromosome,
+      selectedGenome,
+      (gene: GeneFromSearch) => gene.chrom === selectedChromosome,
+    );
+  }, [selectedChromosome, selectedGenome, mode]);
+
 
   const handleGenomeChange = (value: string) => {
     setSelectedGenome(value);
@@ -69,6 +97,15 @@ export default function HomePage() {
 
   const switchMode = (newMode: Mode) => {
     if (newMode === mode) return;
+    setSearchResults([]);
+    setError(null);
+    if (newMode === "browse" && selectedChromosome) {
+      performGeneSearch(
+        selectedChromosome,
+        selectedGenome,
+        (gene: GeneFromSearch) => gene.chrom === selectedChromosome,
+      );
+    }
     setMode(newMode);
   }
 
@@ -83,6 +120,7 @@ export default function HomePage() {
     if (e) e.preventDefault();
     if (!searchQuery.trim()) return;
     //perform gene search
+    performGeneSearch(searchQuery, selectedGenome);
 
 
 
@@ -93,14 +131,17 @@ export default function HomePage() {
       <header className="border-b border-[#3c4f3d]/20 bg-white">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <h1 className="text-xl font-light tracking-wide text-[#3c4f3d]">
-                <span className="font-normal">Evo</span>
-                <span className="font-semibold text-[#4c00ff]">2</span>
-              </h1>
-              <div className="absolute -bottom-1 left-0 h-[2px] w-12 bg-[#4c00ff]"></div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4c00ff]/20 to-[#4c00ff]/5 shadow-sm ring-1 ring-[#4c00ff]/20">
+                <Dna className="h-6 w-6 text-[#4c00ff]" />
+              </div>
+              <div className="flex flex-col justify-center">
+                <h1 className="text-xl font-bold tracking-tight text-[#3c4f3d]">
+                  Genomix<span className="text-[#4c00ff]">AI</span>
+                </h1>
+                <p className="text-xs font-bold tracking-wide text-[#3c4f3d]/60 uppercase">DNA Variant Analysis</p>
+              </div>
             </div>
-            <span className="text-sm font-light text-[#3c4f3d]/70">DNA Variant Analysis</span>
           </div>
         </div>
       </header>
@@ -217,6 +258,22 @@ export default function HomePage() {
             </div>}
             {error && <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}
             </div>}
+            {(searchResults.length > 0 && !isLoading) && (
+              <div className="mt-6">
+                <div className="mb-2">
+                  <h4>
+                    {mode === "search" ? (
+                      <>
+                        Search Results:{" "}
+                        <span>{searchResults.length} genes</span>
+                      </>
+                    ) : (
+                      <></>
+                    )}
+                  </h4>
+                </div>
+              </div>
+            )}
 
           </CardContent>
 
