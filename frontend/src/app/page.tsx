@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Search, Dna, Heading1 } from "lucide-react";
+import { Search, Dna, Heading1, Github } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
@@ -32,6 +32,18 @@ export default function HomePage() {
   const [selectedGene, setSelectedGene] = useState<GeneFromSearch | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [mode, setMode] = useState<Mode>("search");
+  const [starCount, setStarCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("https://api.github.com/repos/GeneralSubhra/variant-analysis-evo2")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.stargazers_count !== undefined) {
+          setStarCount(data.stargazers_count);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch star count", err));
+  }, []);
 
   useEffect(() => {
     const fetchGenomes = async () => {
@@ -134,20 +146,31 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#e6e6e6]" >
       <header className="border-b border-[#3c4f3d]/20 bg-white">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4c00ff]/20 to-[#4c00ff]/5 shadow-sm ring-1 ring-[#4c00ff]/20">
-                <Dna className="h-6 w-6 text-[#4c00ff]" />
-              </div>
-              <div className="flex flex-col justify-center">
-                <h1 className="text-xl font-bold tracking-tight text-[#3c4f3d]">
-                  Genomix<span className="text-[#4c00ff]">AI</span>
-                </h1>
-                <p className="text-xs font-bold tracking-wide text-[#3c4f3d]/60 uppercase">DNA Variant Analysis</p>
-              </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4c00ff]/20 to-[#4c00ff]/5 shadow-sm ring-1 ring-[#4c00ff]/20">
+              <Dna className="h-6 w-6 text-[#4c00ff]" />
+            </div>
+            <div className="flex flex-col justify-center">
+              <h1 className="text-xl font-bold tracking-tight text-[#3c4f3d]">
+                Genomix<span className="text-[#4c00ff]">AI</span>
+              </h1>
+              <p className="text-xs font-bold tracking-wide text-[#3c4f3d]/60 uppercase">DNA Variant Analysis</p>
             </div>
           </div>
+          <a
+            href="https://github.com/GeneralSubhra/variant-analysis-evo2"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-black hover:shadow-md"
+          >
+            <Github className="h-4 w-4 text-gray-500 transition-colors group-hover:text-black" />
+            {starCount !== null && (
+              <span className="font-semibold tabular-nums text-gray-900">
+                {starCount}
+              </span>
+            )}
+          </a>
         </div>
       </header>
 

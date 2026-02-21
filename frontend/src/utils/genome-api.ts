@@ -33,6 +33,25 @@ export interface GeneDetailsFromSearch {
     commonname: string;
   }
 }
+
+export interface GeneDetailsFromSearch {
+  genomicinfo?: {
+    chrstart: number;
+    chrstop: number;
+    strand?: string;
+  }[];
+  summary?: string;
+  organism?: {
+    scientificname: string;
+    commonname: string;
+  }
+}
+
+export interface GeneBound {
+  min: number;
+  max: number;
+}
+
 export async function getAvailableGenomes() {
   const apiURL = "http://api.genome.ucsc.edu/list/ucscGenomes";
   const response = await fetch(apiURL);
@@ -140,4 +159,20 @@ export async function searchGenes(query: string, genome: string) {
     }
   }
   return { result };
+}
+
+export async function fetchGeneDetails(geneId: string,): Promise<{
+  geneDetails: GeneDetailsFromSearch | null;
+  geneBound: GeneBound | null;
+  initialRange: { start: number; end: number } | null;
+
+}> {
+  try {
+    const detailsUrl = `https://eutils.ncbi.nlm.nih.gov/entrez.eutils/esummary.fcgi?db=gene&id=${geneId}&retmode=json';
+    const de
+  }catch(err){
+    return {geneDetails:null,geneBound:null,initialRange:null};
+  }
+  
+
 }
