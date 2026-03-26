@@ -1,3 +1,4 @@
+import { Chrome } from "lucide-react";
 import { symbol } from "zod/v4";
 
 export interface GenomeAssemblyFromSearch {
@@ -17,21 +18,7 @@ export interface GeneFromSearch {
   name: string;
   chrom: string;
   description: string;
-  GeneID: string;
-}
-
-export interface GeneDetailsFromSearch {
-  genomicInfo?: {
-    chrstart: number;
-    chrstop: number;
-    strand?: string;
-
-  }[];
-  summary?: string;
-  organism?: {
-    scientificname: string;
-    commonname: string;
-  }
+  GeneID?: string;
 }
 
 export interface GeneDetailsFromSearch {
@@ -168,11 +155,74 @@ export async function fetchGeneDetails(geneId: string,): Promise<{
 
 }> {
   try {
-    const detailsUrl = `https://eutils.ncbi.nlm.nih.gov/entrez.eutils/esummary.fcgi?db=gene&id=${geneId}&retmode=json';
-    const de
-  }catch(err){
-    return {geneDetails:null,geneBound:null,initialRange:null};
-  }
-  
+    const detailsUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gene&id=${geneId}&retmode=json`;
+    const detailsResponse = await fetch(detailsUrl);
 
+    if (!detailsResponse.ok) {
+      console.error(`Failed to fetch gene details:${detailsResponse.statusText}`,);
+
+      return { geneDetails: null, geneBound: null, initialRange: null };
+    }
+    const detailData = await detailsResponse.json()
+    if (detailData.result && detailData.result[geneId]) {
+      const detail = detailData.result[geneId];
+      if (detail.genomicinfo && detail.genomicinfo.length > 0) {
+        const info = detail.genomicinfo[0];
+        const start = info.chrstart;
+        const stop = info.chrstop;
+        const strand = info.strand;
+        const chr = info.chr;
+        const bounds = { min: start, max: stop };
+        const geneDetails = { genomicinfo: detail.genomicinfo, summary: detail.summary, organism: detail.organism };
+
+        const minPos = Math.min(start, stop);
+        const maxPos = Math.max(start, stop);
+        const geneSize = maxPos - minPos;
+        const seqStart = minPos;
+        const seqEnd = geneSize > 10000 ? minPos + 10000 : maxPos;
+        const range = { start: seqStart, end: seqEnd };
+        return { geneDetails, geneBound: bounds, initialRange: range };
+      }
+    }
+
+  } catch (err) {
+    return { geneDetails: null, geneBound: null, initialRange: null };
+  }
+
+  return { geneDetails: null, geneBound: null, initialRange: null };
+}
+
+export async function fetchGeneSequence(
+  chrom: string,
+  start: number,
+  end: number,
+  genomeId: string,
+): Promise<{
+  sequence: string;
+  actualRange: { start: number; end: number };
+  error?: string;
+}> {
+  try {
+    const chromosome = chrom.startsWith("chr") ? chrom : `chr${chrom}`;
+    const apiStart = start - 1;
+    const apiEnd = end;
+    const apiUrl = `https://api.genome.ucsc.edu/getData/sequence?genome=${genomeId};chrom=${chromosome};start=${apiStart};end=${apiEnd}`;
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    const actualRange = { start, end };
+
+    if (data.error || !data.dna) {
+      return { sequence: "", actualRange, error: data.error };
+    }
+
+    const sequence = data.dna.toUpperCase();
+
+    return { sequence, actualRange };
+  } catch (err) {
+    return {
+      sequence: "",
+      actualRange: { start, end },
+      error: "Internal error in fetch gene sequence",
+    };
+  }
 }
