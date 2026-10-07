@@ -1,91 +1,67 @@
-# 🧬 Variant Analysis with Evo2  
-**AI-Powered DNA Mutation Pathogenicity Prediction**
+# 🧬 GenomixAI — AI-Powered DNA Variant Analysis
 
-> Predict whether a DNA mutation is **disease-causing or harmless** using a **state-of-the-art AI model**, real clinical databases, and **GPU-accelerated inference** — all wrapped in a modern full-stack web app.
+GenomixAI is an applied AI research project exploring how **genomic foundation models can assist with DNA variant analysis**.
 
----
+The system combines **Evo2-based inference**, clinical variant data, genome references, and a full-stack application to make genomic variant exploration more accessible.
 
-## 🚀 Why This Project?
+> **Important:** This is a research/prototype system and is **not a clinical diagnostic tool**. Predictions should not be used for medical decisions.
 
-DNA mutations play a critical role in diseases like cancer — but understanding their impact is **slow, complex, and expensive**.
+## Why GenomixAI?
 
-This project demonstrates how **modern AI + cloud GPUs** can:
+Interpreting genomic variants requires combining sequence context with biological and clinical evidence. GenomixAI explores a practical workflow for bringing these signals together:
 
-- Analyze DNA mutations in seconds  
-- Predict disease risk  
-- Compare results with real clinical databases  
-- Present everything in a clean, beginner-friendly UI  
+1. Accept a genomic variant or gene of interest.
+2. Run model-based sequence analysis with **Evo2**.
+3. Retrieve relevant clinical classifications from **NCBI ClinVar**.
+4. Retrieve reference/genome context from **UCSC Genome Browser APIs**.
+5. Present the results through an interactive web application.
 
-🔥 **No biology background required** — the app handles the complexity for you.
-
----
-
-## ✨ What You Can Do
-
-- 🧬 Predict if a DNA mutation is **pathogenic or benign**
-- ⚖️ Compare AI predictions with **ClinVar medical classifications**
-- 🔍 Search genes like **BRCA1** or browse entire chromosomes
-- 🌍 Choose genome assemblies (hg38, etc.)
-- 📊 Get prediction confidence scores
-- ⚡ Run AI inference on **NVIDIA H100 GPUs**
-- 🧪 Explore real genomic and clinical data interactively
-
----
-
-## 🧠 How It Works (Simple)
-
-- DNA is made of **A, T, G, C**
-- A single letter change = **mutation**
-- Some mutations cause disease, some don’t
-
-This app:
-1. Takes a mutation  
-2. Runs it through an AI model (**Evo2**)  
-3. Compares results with real medical data  
-4. Shows a clear, understandable result  
-
----
-
-## 🏗️ Architecture (High Level)
+## Architecture
 
 ```
-Frontend (Next.js)
-        ↓
-FastAPI Backend
-        ↓
-Evo2 AI Model (GPU)
-        ↓
-ClinVar + UCSC APIs
+                    ┌─────────────────────┐
+                    │     Next.js UI      │
+                    │  React + TypeScript  │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │    FastAPI API      │
+                    │   Python 3.12       │
+                    └──────────┬──────────┘
+                               │
+                 ┌─────────────┼─────────────┐
+                 ▼             ▼             ▼
+          ┌───────────┐  ┌───────────┐  ┌───────────┐
+          │   Evo2    │  │  ClinVar  │  │    UCSC   │
+          │  Inference│  │   API     │  │ Genome API│
+          └─────┬─────┘  └───────────┘  └───────────┘
+                │
+                ▼
+          ┌─────────────┐
+          │ Modal GPU   │
+          │ H100 / GPU  │
+          └─────────────┘
 ```
 
-- Serverless GPU inference  
-- FastAPI REST endpoints  
-- Modern React UI  
+## Key Features
 
----
+- 🧬 DNA variant analysis with Evo2
+- ⚖️ Comparison with ClinVar clinical classifications
+- 🔎 Gene and chromosome exploration
+- 🌍 Reference genome support
+- 📊 Model confidence information
+- ⚡ GPU-accelerated inference
+- 🚀 Serverless GPU deployment through Modal
+- 📱 Responsive web interface
 
-## 🧩 Key Features
+## Technical Stack
 
-- 🧬 Evo2 large language model for genomic analysis
-- 🩺 Pathogenic vs benign prediction
-- ⚖️ AI vs ClinVar comparison view
-- 💯 Prediction confidence scoring
-- 🗺️ Chromosome & gene browser
-- 📜 Reference genome visualization (UCSC)
-- 🔬 Real clinical variant data (NCBI ClinVar)
-- ⚡ NVIDIA H100 GPU acceleration
-- 🚀 Serverless deployment with Modal
-- 📱 Fully responsive UI
-
----
-
-## 🛠️ Tech Stack
-
-### Backend
+### AI / Backend
 - Python 3.12
 - FastAPI
-- Modal (Serverless GPUs)
-- Evo2 LLM
+- Evo2
+- Modal serverless GPUs
 - NCBI ClinVar API
 - UCSC Genome API
 
@@ -94,67 +70,80 @@ ClinVar + UCSC APIs
 - React
 - TypeScript
 - Tailwind CSS
-- Shadcn UI
-- T3 Stack
+- shadcn/ui
 
----
+## Evaluation & Research
 
-## 📦 Getting Started
+The project is intended as an **applied research and engineering prototype** rather than a clinically validated predictor.
 
-### Clone the Repo
+Future evaluation should include:
+
+- Benchmarking against curated variant datasets
+- AUROC / AUPRC / F1 and calibration analysis
+- Comparison against non-Evo2 baselines
+- Inference latency and GPU-cost measurements
+- Robustness across genomic regions and variant classes
+- Error analysis against ClinVar disagreements
+
+**No clinical performance claims are made by this repository.**
+
+## Getting Started
+
+### Clone
+
 ```bash
 git clone https://github.com/GeneralSubhra/variant-analysis-evo2
 cd variant-analysis-evo2
 ```
 
----
+### Backend
 
-## ⚙️ Backend Setup
 ```bash
 cd backend
-```
 
-### Prerequisites
-- Python 3.12
-- uv package manager  
-  https://github.com/astral-sh/uv
-
-### Install & Run
-```bash
 uv venv --python 3.12
-source .venv/bin/activate   # Mac/Linux
-# or .venv\Scripts\activate # Windows
+source .venv/bin/activate
+# Windows:
+# .venv\\Scripts\\activate
 
 uv pip install -r requirements.txt
+
 modal setup
 modal run main.py
 ```
 
-### Deploy (Production)
+For production deployment:
+
 ```bash
 modal deploy main.py
 ```
 
----
+### Frontend
 
-## 🎨 Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-App runs at:
+The frontend runs at:
+
 ```
 http://localhost:3000
 ```
 
----
+## References
 
-## 📚 Evo2 Model
-- 📄 Paper: https://www.science.org/doi/10.1126/science.ado9336
-- 💻 GitHub: https://github.com/ArcInstitute/evo2
+- Evo2 paper: https://www.science.org/doi/10.1126/science.ado9336
+- Evo2 implementation: https://github.com/ArcInstitute/evo2
+- ClinVar: https://www.ncbi.nlm.nih.gov/clinvar/
+- UCSC Genome Browser: https://genome.ucsc.edu/
 
----
+## Roadmap
 
-👉 **Please star ⭐ the repo — it really helps!**
+- [ ] Add reproducible benchmark suite
+- [ ] Add baseline model comparisons
+- [ ] Add automated evaluation pipeline
+- [ ] Add latency / cost benchmarks
+- [ ] Expand variant classes and genomic regions
+- [ ] Improve uncertainty and calibration analysis
